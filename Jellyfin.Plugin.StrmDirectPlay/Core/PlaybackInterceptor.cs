@@ -113,41 +113,44 @@ namespace Jellyfin.Plugin.StrmDirectPlay.Core
             string url,
             PluginConfiguration config)
         {
-            var modified = new MediaSourceInfo
+            // Modify in-place to preserve all original properties
+            // This ensures Jellyfin's StreamBuilder sees the modified URL
+            mediaSource.Path = url;
+            mediaSource.Protocol = MediaBrowser.Model.MediaInfo.MediaProtocol.Http;
+            mediaSource.IsRemote = true;
+            mediaSource.SupportsDirectPlay = true;
+            mediaSource.SupportsDirectStream = true;
+            mediaSource.SupportsTranscoding = !config.BlockTranscoding;
+            mediaSource.RequiresOpening = false;
+            mediaSource.RequiresClosing = false;
+            mediaSource.SupportsProbing = false;
+            
+            // Set VideoType to VideoFileOrUrl so StreamBuilder treats it as direct playable
+            mediaSource.VideoType = MediaBrowser.Model.Entities.VideoType.VideoFile;
+            
+            // Ensure container is set (important for StreamBuilder)
+            if (string.IsNullOrEmpty(mediaSource.Container))
             {
-                Id = mediaSource.Id,
-                Path = url,
-                Protocol = MediaBrowser.Model.MediaInfo.MediaProtocol.Http,
-                SupportsDirectPlay = true,
-                SupportsDirectStream = true,
-                SupportsTranscoding = !config.BlockTranscoding,
-                IsRemote = true,
-                IsInfiniteStream = false,
-                RequiresOpening = false,
-                RequiresClosing = false,
-                BufferMs = mediaSource.BufferMs,
-                SupportsProbing = false,
-                VideoType = mediaSource.VideoType,
-                Container = mediaSource.Container,
-                Name = mediaSource.Name,
-                RunTimeTicks = mediaSource.RunTimeTicks
-            };
-
-            // Copy media streams if available
-            if (mediaSource.MediaStreams != null)
-            {
-                modified.MediaStreams = mediaSource.MediaStreams;
+                // Infer container from URL extension
+                var extension = System.IO.Path.GetExtension(url)?.TrimStart('.').ToLowerInvariant();
+                if (!string.IsNullOrEmpty(extension))
+                {
+                    mediaSource.Container = extension;
+                }
             }
 
             if (config.DebugLogging)
             {
                 _logger.LogInformation("[STRM-DP] Modified MediaSource:");
-                _logger.LogInformation("[STRM-DP]   Path: {Path}", modified.Path);
-                _logger.LogInformation("[STRM-DP]   SupportsDirectPlay: {Value}", modified.SupportsDirectPlay);
-                _logger.LogInformation("[STRM-DP]   SupportsTranscoding: {Value}", modified.SupportsTranscoding);
+                _logger.LogInformation("[STRM-DP]   Path: {Path}", mediaSource.Path);
+                _logger.LogInformation("[STRM-DP]   Protocol: {Protocol}", mediaSource.Protocol);
+                _logger.LogInformation("[STRM-DP]   IsRemote: {IsRemote}", mediaSource.IsRemote);
+                _logger.LogInformation("[STRM-DP]   SupportsDirectPlay: {Value}", mediaSource.SupportsDirectPlay);
+                _logger.LogInformation("[STRM-DP]   SupportsTranscoding: {Value}", mediaSource.SupportsTranscoding);
+                _logger.LogInformation("[STRM-DP]   Container: {Container}", mediaSource.Container);
             }
 
-            return modified;
+            return mediaSource;
         }
 
         /// <summary>
