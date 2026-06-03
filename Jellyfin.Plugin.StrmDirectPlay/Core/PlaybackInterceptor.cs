@@ -128,6 +128,27 @@ namespace Jellyfin.Plugin.StrmDirectPlay.Core
             // Set VideoType to VideoFileOrUrl so StreamBuilder treats it as direct playable
             mediaSource.VideoType = MediaBrowser.Model.Entities.VideoType.VideoFile;
             
+            // Clear transcode reasons - critical to prevent forced transcoding
+            mediaSource.TranscodeReasons = MediaBrowser.Model.Dlna.TranscodeReason.None;
+            
+            // Fix anamorphic video issue - many clients don't report anamorphic support
+            // so Jellyfin forces transcode. For STRM files, we assume the source
+            // already has correct aspect ratio
+            if (mediaSource.MediaStreams != null)
+            {
+                foreach (var stream in mediaSource.MediaStreams)
+                {
+                    if (stream.Type == MediaBrowser.Model.Entities.MediaStreamType.Video && stream.IsAnamorphic)
+                    {
+                        if (config.DebugLogging)
+                        {
+                            _logger.LogInformation("[STRM-DP] Clearing anamorphic flag for video stream {Index}", stream.Index);
+                        }
+                        stream.IsAnamorphic = false;
+                    }
+                }
+            }
+            
             // Ensure container is set (important for StreamBuilder)
             if (string.IsNullOrEmpty(mediaSource.Container))
             {
@@ -136,6 +157,10 @@ namespace Jellyfin.Plugin.StrmDirectPlay.Core
                 if (!string.IsNullOrEmpty(extension))
                 {
                     mediaSource.Container = extension;
+                }
+                else if (url.Contains("m3u8", StringComparison.OrdinalIgnoreCase))
+                {
+                    mediaSource.Container = "hls";
                 }
             }
 
@@ -148,6 +173,7 @@ namespace Jellyfin.Plugin.StrmDirectPlay.Core
                 _logger.LogInformation("[STRM-DP]   SupportsDirectPlay: {Value}", mediaSource.SupportsDirectPlay);
                 _logger.LogInformation("[STRM-DP]   SupportsTranscoding: {Value}", mediaSource.SupportsTranscoding);
                 _logger.LogInformation("[STRM-DP]   Container: {Container}", mediaSource.Container);
+                _logger.LogInformation("[STRM-DP]   TranscodeReasons: {Reasons}", mediaSource.TranscodeReasons);
             }
 
             return mediaSource;
