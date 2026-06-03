@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>STRM DirectPlay</title>
+</head>
+<body>
+    <div id="StrmDirectPlayConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="StrmDirectPlayConfigForm">
+                    <div class="verticalSection">
+                        <div class="sectionTitleContainer flex align-items-center">
+                            <h2 class="sectionTitle">STRM DirectPlay Configuration</h2>
+                            <a is="emby-linkbutton" class="raised button-alt headerHelpButton" target="_blank" href="https://github.com/fahriztx/STRM-DirectPlay-Jellyfin">Help</a>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3>Plugin Mode</h3>
+                        <p>Select how the plugin should handle .strm files</p>
+                        <select is="emby-select" id="selectMode" name="selectMode" class="emby-select-withcolor emby-select">
+                            <option value="0">Disabled - Plugin does nothing</option>
+                            <option value="1">AlwaysDirectPlay - Force direct play for all .strm</option>
+                            <option value="2">DomainWhitelist - Only apply to whitelisted domains</option>
+                            <option value="3">ReturnOriginalUrl - Return URL without Jellyfin proxy</option>
+                            <option value="4">Smart - Whitelist + Return original URL (Recommended)</option>
+                        </select>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3>Domain Whitelist</h3>
+                        <p>Enter one domain per line (e.g., proxy.domain.com)</p>
+                        <textarea is="emby-textarea" id="txtDomainWhitelist" name="txtDomainWhitelist" rows="5" class="emby-textarea"></textarea>
+                    </div>
+
+                    <div class="verticalSection">
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="chkBlockTranscoding" name="chkBlockTranscoding" />
+                                <span>Block Transcoding</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Block transcoding requests for .strm files
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="chkDebugLogging" name="chkDebugLogging" />
+                                <span>Debug Logging</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Enable verbose logging for debugging
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var StrmDirectPlayConfig = {
+                pluginUniqueId: 'a7b3c9e5-1f2d-4a8b-9c3e-5d7f8a9b1c2d'
+            };
+
+            document.querySelector('#StrmDirectPlayConfigPage')
+                .addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(StrmDirectPlayConfig.pluginUniqueId).then(function (config) {
+                        document.querySelector('#selectMode').value = config.Mode;
+                        document.querySelector('#txtDomainWhitelist').value = (config.DomainWhitelist || []).join('\n');
+                        document.querySelector('#chkBlockTranscoding').checked = config.BlockTranscoding;
+                        document.querySelector('#chkDebugLogging').checked = config.DebugLogging;
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+            document.querySelector('#StrmDirectPlayConfigForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+
+                ApiClient.getPluginConfiguration(StrmDirectPlayConfig.pluginUniqueId).then(function (config) {
+                    config.Mode = parseInt(document.querySelector('#selectMode').value);
+                    
+                    var domainText = document.querySelector('#txtDomainWhitelist').value;
+                    config.DomainWhitelist = domainText
+                        .split('\n')
+                        .map(function(line) { return line.trim(); })
+                        .filter(function(line) { return line.length > 0; });
+                    
+                    config.BlockTranscoding = document.querySelector('#chkBlockTranscoding').checked;
+                    config.DebugLogging = document.querySelector('#chkDebugLogging').checked;
+
+                    ApiClient.updatePluginConfiguration(StrmDirectPlayConfig.pluginUniqueId, config).then(function (result) {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    });
+                });
+
+                return false;
+            });
+        </script>
+    </div>
+</body>
+</html>
