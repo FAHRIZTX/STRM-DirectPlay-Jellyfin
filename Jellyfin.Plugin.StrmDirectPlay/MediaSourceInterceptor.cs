@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.StrmDirectPlay.Core;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.MediaEncoding;
 using MediaBrowser.Model.Dto;
 using Microsoft.Extensions.Logging;
 
@@ -12,6 +14,7 @@ namespace Jellyfin.Plugin.StrmDirectPlay
 {
     /// <summary>
     /// Media source provider for STRM files.
+    /// Implements IMediaSourceProvider to intercept playback for .strm files.
     /// </summary>
     public class MediaSourceInterceptor : IMediaSourceProvider
     {
@@ -33,26 +36,41 @@ namespace Jellyfin.Plugin.StrmDirectPlay
         }
 
         /// <inheritdoc />
-        public async Task<MediaSourceInfo> GetMediaSource(BaseItem item, string mediaSourceId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<MediaSourceInfo>> GetMediaSources(BaseItem item, CancellationToken cancellationToken)
         {
             var config = Plugin.Instance?.Configuration;
             if (config == null)
             {
-                throw new InvalidOperationException("Plugin configuration not available");
+                return Enumerable.Empty<MediaSourceInfo>();
             }
 
-            var mediaSources = item.GetMediaSources(false);
-            var originalSource = mediaSources.FirstOrDefault(i => string.Equals(i.Id, mediaSourceId, StringComparison.OrdinalIgnoreCase));
-
-            if (originalSource == null)
+            if (!_urlReader.IsStrmFile(item.Path))
             {
-                throw new InvalidOperationException($"Media source not found: {mediaSourceId}");
+                return Enumerable.Empty<MediaSourceInfo>();
             }
 
-            var modifiedSource = await _interceptor.ProcessMediaSourceAsync(item, originalSource, config)
-                .ConfigureAwait(false);
+            var originalSources = item.GetMediaSources(false);
 
-            return modifiedSource ?? originalSource;
+            var result = new List<MediaSourceInfo>();
+            foreach (var source in originalSources)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var modified = await _interceptor.ProcessMediaSourceAsync(item, source, config)
+                    .ConfigureAwait(false);
+
+                result.Add(modified ?? source);
+            }
+
+            return result;
+        }
+
+        /// <inheritdoc />
+        public Task<ILiveStream> OpenMediaSource(string openToken, List<ILiveStream> currentLiveStreams, CancellationToken cancellationToken)
+        {
+            // STRM files are remote HTTP streams — no live stream session needed.
+            throw new NotImplementedException("STRM DirectPlay does not support live stream opening.");
         }
     }
 }
+
