@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Jellyfin.Plugin.StrmDirectPlay.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Model.Dto;
+using MediaBrowser.Model.Session;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.StrmDirectPlay.Core
@@ -129,7 +130,7 @@ namespace Jellyfin.Plugin.StrmDirectPlay.Core
             mediaSource.VideoType = MediaBrowser.Model.Entities.VideoType.VideoFile;
             
             // Clear transcode reasons - critical to prevent forced transcoding
-            mediaSource.TranscodeReasons = MediaBrowser.Model.Dlna.TranscodeReason.None;
+            mediaSource.TranscodeReasons = TranscodeReason.None;
             
             // Fix anamorphic video issue - many clients don't report anamorphic support
             // so Jellyfin forces transcode. For STRM files, we assume the source
@@ -138,7 +139,7 @@ namespace Jellyfin.Plugin.StrmDirectPlay.Core
             {
                 foreach (var stream in mediaSource.MediaStreams)
                 {
-                    if (stream.Type == MediaBrowser.Model.Entities.MediaStreamType.Video && stream.IsAnamorphic)
+                    if (stream.Type == MediaBrowser.Model.Entities.MediaStreamType.Video && stream.IsAnamorphic == true)
                     {
                         if (config.DebugLogging)
                         {
