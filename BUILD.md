@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- .NET 8.0 SDK
+- .NET 9.0 SDK
 - Git
 
 ## Windows
@@ -19,7 +19,7 @@ dotnet restore
 dotnet build -c Release
 
 # Output location
-# Jellyfin.Plugin.StrmDirectPlay\bin\Release\net8.0\
+# Jellyfin.Plugin.StrmDirectPlay\bin\Release\net9.0\
 ```
 
 ## Linux/macOS
@@ -36,7 +36,7 @@ dotnet restore
 dotnet build -c Release
 
 # Output location
-# Jellyfin.Plugin.StrmDirectPlay/bin/Release/net8.0/
+# Jellyfin.Plugin.StrmDirectPlay/bin/Release/net9.0/
 ```
 
 ## Create Release Package
@@ -50,7 +50,7 @@ $pluginDir = "release/plugins/Jellyfin.Plugin.StrmDirectPlay"
 New-Item -ItemType Directory -Path $pluginDir -Force
 
 # Copy DLL and dependencies
-Copy-Item "Jellyfin.Plugin.StrmDirectPlay/bin/Release/net8.0/Jellyfin.Plugin.StrmDirectPlay.dll" $pluginDir
+Copy-Item "Jellyfin.Plugin.StrmDirectPlay/bin/Release/net9.0/Jellyfin.Plugin.StrmDirectPlay.dll" $pluginDir
 
 # Create ZIP
 Compress-Archive -Path "release/plugins/*" -DestinationPath "STRM-DirectPlay-Jellyfin_1.0.0.0.zip"

@@ -5,7 +5,7 @@
   "overview": "STRM DirectPlay gives you full control over how Jellyfin handles .strm files. Perfect for users with self-hosted proxies, HLS streams, Alist, WebDAV, or cloud storage who want to minimize transcoding.",
   "owner": "fahriztx",
   "category": "General",
-  "imageUrl": "https://raw.githubusercontent.com/fahriztx/STRM-DirectPlay-Jellyfin/main/assets/logo.png",
+  "imageUrl": "https://raw.githubusercontent.com/fahriztx/STRM-DirectPlay-Jellyfin/master/assets/logo.png",
   "versions": [
     {
       "version": "1.0.0.0",

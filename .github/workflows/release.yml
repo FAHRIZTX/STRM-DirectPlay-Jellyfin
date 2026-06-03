@@ -57,7 +57,7 @@ jobs:
 
           mkdir -p "${OUTPUT_DIR}"
 
-          cp "${PLUGIN_NAME}/bin/Release/net8.0/${PLUGIN_NAME}.dll" "${OUTPUT_DIR}/"
+          cp "${PLUGIN_NAME}/bin/Release/net9.0/${PLUGIN_NAME}.dll" "${OUTPUT_DIR}/"
           cp README.md LICENSE CHANGELOG.md manifest.json "${OUTPUT_DIR}/"
 
           cd release

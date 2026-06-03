@@ -88,7 +88,7 @@ Prefix all log messages with `[STRM-DP]`.
 
 ## Development Setup
 
-1. Install .NET 8.0 SDK
+1. Install .NET 9.0 SDK
 2. Clone repository
 3. Open in Visual Studio 2022 or VS Code
 4. Build: `dotnet build`

@@ -49,7 +49,7 @@ cd STRM-DirectPlay-Jellyfin
 dotnet build -c Release
 
 # Copy output to plugins folder
-# Output is at: Jellyfin.Plugin.StrmDirectPlay\bin\Release\net8.0\
+# Output is at: Jellyfin.Plugin.StrmDirectPlay\bin\Release\net9.0\
 ```
 
 ## Configuration
@@ -173,7 +173,7 @@ Plugin has security checks:
 
 ### Requirements
 
-- .NET 8.0 SDK
+- .NET 9.0 SDK
 - Jellyfin 10.11.x
 - Visual Studio 2022 or VS Code
 
