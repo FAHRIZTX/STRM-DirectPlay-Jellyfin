@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Jellyfin.Plugin.StrmDirectPlay.Core;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.MediaEncoding;
 using MediaBrowser.Model.Dto;
 using Microsoft.Extensions.Logging;
 
@@ -27,12 +26,13 @@ namespace Jellyfin.Plugin.StrmDirectPlay
         /// Initializes a new instance of the <see cref="MediaSourceInterceptor"/> class.
         /// </summary>
         /// <param name="logger">Logger instance.</param>
-        public MediaSourceInterceptor(ILogger<MediaSourceInterceptor> logger)
+        /// <param name="loggerFactory">Logger factory for creating typed loggers.</param>
+        public MediaSourceInterceptor(ILogger<MediaSourceInterceptor> logger, ILoggerFactory loggerFactory)
         {
             _logger = logger;
-            _urlReader = new StrmUrlReader(logger);
-            _domainMatcher = new DomainMatcher(logger);
-            _interceptor = new PlaybackInterceptor(logger, _urlReader, _domainMatcher);
+            _urlReader = new StrmUrlReader(loggerFactory.CreateLogger<StrmUrlReader>());
+            _domainMatcher = new DomainMatcher(loggerFactory.CreateLogger<DomainMatcher>());
+            _interceptor = new PlaybackInterceptor(loggerFactory.CreateLogger<PlaybackInterceptor>(), _urlReader, _domainMatcher);
         }
 
         /// <inheritdoc />
