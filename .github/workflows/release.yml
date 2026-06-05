@@ -129,7 +129,9 @@ jobs:
           REPO_URL="https://github.com/${{ github.repository }}"
           SOURCE_URL="${REPO_URL}/releases/download/${GITHUB_REF_NAME}/${ZIP_NAME}"
 
-          # Prepend a new version entry to manifest.json (changelog filled in next step)
+          # Prepend a new version entry to manifest.json (changelog filled in next step).
+          # Remove an existing entry with the same version first so re-running
+          # the release workflow does not duplicate manifest entries.
           jq --arg version   "${VERSION}" \
              --arg targetAbi "10.11.0.0" \
              --arg sourceUrl "${SOURCE_URL}" \
@@ -143,7 +145,7 @@ jobs:
                 sourceUrl: $sourceUrl,
                 checksum:  $checksum,
                 timestamp: $timestamp
-              }] + .versions' \
+              }] + (.versions | map(select(.version != $version)))' \
              manifest.json > manifest.json.tmp
 
           mv manifest.json.tmp manifest.json
@@ -173,12 +175,22 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
+          cp manifest.json /tmp/manifest.release.json
+
+          # The workflow is triggered by a tag, so checkout is detached HEAD.
+          # Do not push HEAD to the tag ref. Instead, apply the generated
+          # manifest.json on the repository default branch and push that branch.
+          git fetch origin "${DEFAULT_BRANCH}"
+          git switch --create manifest-update "origin/${DEFAULT_BRANCH}"
+          cp /tmp/manifest.release.json manifest.json
+
           git add manifest.json
           if git diff --cached --quiet; then
             echo "No manifest changes to commit."
           else
             git commit -m "chore(release): update manifest.json for ${GITHUB_REF_NAME}"
-            git push origin HEAD:"${{ github.ref_name }}"
+            git push origin HEAD:"${DEFAULT_BRANCH}"
           fi
 
       - name: Upload workflow artifact
