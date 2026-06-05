@@ -103,7 +103,7 @@ jobs:
           mkdir -p "${OUTPUT_DIR}"
 
           cp "${PLUGIN_NAME}/bin/Release/net9.0/${PLUGIN_NAME}.dll" "${OUTPUT_DIR}/"
-          cp README.md LICENSE CHANGELOG.md manifest.json "${OUTPUT_DIR}/"
+          cp README.md LICENSE CHANGELOG.md "${OUTPUT_DIR}/"
 
           cd release
           zip -r "../${{ steps.version.outputs.zip_name }}" "${PLUGIN_NAME}"
@@ -138,14 +138,14 @@ jobs:
              --arg checksum  "${CHECKSUM}" \
              --arg timestamp "${TIMESTAMP}" \
              --arg changelog "" \
-             '.versions = [{
+             '.[0].versions = [{
                 version:   $version,
                 changelog: $changelog,
                 targetAbi: $targetAbi,
                 sourceUrl: $sourceUrl,
                 checksum:  $checksum,
                 timestamp: $timestamp
-              }] + (.versions | map(select(.version != $version)))' \
+              }] + (.[0].versions | map(select(.version != $version)))' \
              manifest.json > manifest.json.tmp
 
           mv manifest.json.tmp manifest.json
@@ -157,7 +157,7 @@ jobs:
           set -euo pipefail
 
           jq --rawfile cl changelog.tmp \
-             '.versions[0].changelog = $cl' \
+             '.[0].versions[0].changelog = $cl' \
              manifest.json > manifest.json.tmp
 
           mv manifest.json.tmp manifest.json
