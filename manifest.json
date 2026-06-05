@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/fahriztx/STRM-DirectPlay-Jellyfin/master/assets/logo.png",
     "versions": [
       {
+        "version": "1.0.16.0",
+        "changelog": "Release 1.0.16\n",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/FAHRIZTX/STRM-DirectPlay-Jellyfin/releases/download/v1.0.16/STRM-DirectPlay-Jellyfin_1.0.16.zip",
+        "checksum": "bf490c290ec910b1ab94532b250524075fe6db1b50027262dd498c715314b722",
+        "timestamp": "2026-06-05T18:31:45Z"
+      },
+      {
         "version": "1.0.15.0",
         "changelog": "Release 1.0.15\n",
         "targetAbi": "10.11.0.0",
