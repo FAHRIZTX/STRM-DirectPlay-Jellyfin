@@ -9,7 +9,7 @@
 
 ```powershell
 # Clone repository
-git clone https://github.com/fahriztx/STRM-DirectPlay-Jellyfin.git
+git clone https://github.com/FAHRIZTX/STRM-DirectPlay-Jellyfin.git
 cd STRM-DirectPlay-Jellyfin
 
 # Restore dependencies
@@ -26,7 +26,7 @@ dotnet build -c Release
 
 ```bash
 # Clone repository
-git clone https://github.com/fahriztx/STRM-DirectPlay-Jellyfin.git
+git clone https://github.com/FAHRIZTX/STRM-DirectPlay-Jellyfin.git
 cd STRM-DirectPlay-Jellyfin
 
 # Restore dependencies
