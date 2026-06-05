@@ -17,11 +17,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Restore
         run: dotnet restore Jellyfin.Plugin.StrmDirectPlay.sln
@@ -43,8 +49,47 @@ jobs:
             VERSION="manual-${GITHUB_RUN_NUMBER}"
           fi
 
+          # Convert "1.2.3" to Jellyfin assembly-style "1.2.3.0"
+          ASSEMBLY_VERSION="${VERSION}"
+          if [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            ASSEMBLY_VERSION="${VERSION}.0"
+          fi
+
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "assembly_version=${ASSEMBLY_VERSION}" >> "$GITHUB_OUTPUT"
           echo "zip_name=STRM-DirectPlay-Jellyfin_${VERSION}.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Extract changelog for this version
+        id: changelog
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          CHANGELOG=$(awk -v ver="${VERSION}" '
+            BEGIN { in_section = 0 }
+            /^##[[:space:]]+\[?v?/ {
+              line = $0
+              sub(/^##[[:space:]]+\[?v?/, "", line)
+              sub(/\]?[[:space:]]*-?[[:space:]]*[0-9]{4}-[0-9]{2}-[0-9]{2}.*$/, "", line)
+              gsub(/[[:space:]]+$/, "", line)
+              if (line == ver) {
+                in_section = 1
+                next
+              }
+              if (in_section) {
+                in_section = 0
+              }
+            }
+            in_section { print }
+            END { exit 0 }
+          ' CHANGELOG.md)
+
+          if [[ -z "${CHANGELOG// /}" ]]; then
+            CHANGELOG="Release ${VERSION}"
+          fi
+
+          printf '%s\n' "${CHANGELOG}" > changelog.tmp
+          echo "changelog_file=changelog.tmp" >> "$GITHUB_OUTPUT"
 
       - name: Prepare package
         shell: bash
@@ -75,27 +120,66 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          set -euo pipefail
+
+          VERSION="${{ steps.version.outputs.assembly_version }}"
           CHECKSUM="${{ steps.checksum.outputs.sha256 }}"
           ZIP_NAME="${{ steps.version.outputs.zip_name }}"
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           REPO_URL="https://github.com/${{ github.repository }}"
-          
-          # Update manifest.json with jq
-          jq --arg version "${VERSION}" \
-             --arg checksum "${CHECKSUM}" \
+          SOURCE_URL="${REPO_URL}/releases/download/${GITHUB_REF_NAME}/${ZIP_NAME}"
+
+          # Prepend a new version entry to manifest.json (changelog filled in next step)
+          jq --arg version   "${VERSION}" \
+             --arg targetAbi "10.11.0.0" \
+             --arg sourceUrl "${SOURCE_URL}" \
+             --arg checksum  "${CHECKSUM}" \
              --arg timestamp "${TIMESTAMP}" \
-             --arg sourceUrl "${REPO_URL}/releases/download/${{ github.ref_name }}/${ZIP_NAME}" \
-             '.versions[0].version = $version | 
-              .versions[0].checksum = $checksum | 
-              .versions[0].timestamp = $timestamp | 
-              .versions[0].sourceUrl = $sourceUrl' \
+             --arg changelog "" \
+             '.versions = [{
+                version:   $version,
+                changelog: $changelog,
+                targetAbi: $targetAbi,
+                sourceUrl: $sourceUrl,
+                checksum:  $checksum,
+                timestamp: $timestamp
+              }] + .versions' \
              manifest.json > manifest.json.tmp
-          
+
           mv manifest.json.tmp manifest.json
-          
-          echo "Updated manifest.json:"
+
+      - name: Inject changelog text into manifest.json
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          jq --rawfile cl changelog.tmp \
+             '.versions[0].changelog = $cl' \
+             manifest.json > manifest.json.tmp
+
+          mv manifest.json.tmp manifest.json
+          rm -f changelog.tmp
+
+          echo "Final manifest.json:"
           cat manifest.json
+
+      - name: Commit and push manifest.json
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add manifest.json
+          if git diff --cached --quiet; then
+            echo "No manifest changes to commit."
+          else
+            git commit -m "chore(release): update manifest.json for ${GITHUB_REF_NAME}"
+            git push origin HEAD:"${{ github.ref_name }}"
+          fi
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4

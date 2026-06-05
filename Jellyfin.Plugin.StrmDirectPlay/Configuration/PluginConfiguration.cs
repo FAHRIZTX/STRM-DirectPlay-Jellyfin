@@ -68,6 +68,22 @@ namespace Jellyfin.Plugin.StrmDirectPlay.Configuration
         /// <summary>
         /// Smart mode - whitelist + return original URL.
         /// </summary>
-        Smart = 4
+        Smart = 4,
+
+        /// <summary>
+        /// Force direct play for all STRM files, bypasses user policy and
+        /// Jellyfin's automatic container/protocol checks. Use this when
+        /// you want HLS (.m3u8) and other remote streams to be sent
+        /// directly to the client without any transcoding.
+        /// </summary>
+        ForceDirectStream = 5,
+
+        /// <summary>
+        /// Bypass every user policy and Jellyfin internal check. Like
+        /// ForceDirectStream but also forces PlayMethod.DirectPlay even
+        /// when the user has "Force transcoding" or "Force remux" enabled.
+        /// Use only for trusted local STRM sources.
+        /// </summary>
+        BypassUserPolicy = 6,
     }
 }

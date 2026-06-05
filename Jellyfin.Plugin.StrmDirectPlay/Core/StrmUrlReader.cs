@@ -72,7 +72,12 @@ namespace Jellyfin.Plugin.StrmDirectPlay.Core
         /// </summary>
         /// <param name="path">File path.</param>
         /// <returns>True if STRM file.</returns>
-        public bool IsStrmFile(string? path)
+        public bool IsStrmFile(string? path) => IsStrmPath(path);
+
+        /// <summary>
+        /// Static helper: check if the given path is a STRM file (suffix check).
+        /// </summary>
+        public static bool IsStrmPath(string? path)
         {
             if (string.IsNullOrWhiteSpace(path))
             {

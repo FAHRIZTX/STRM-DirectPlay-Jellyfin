@@ -148,11 +148,49 @@ namespace Jellyfin.Plugin.StrmDirectPlay
 
         /// <inheritdoc />
         public bool SupportsDirectStream(string path, MediaProtocol protocol)
-            => _inner.SupportsDirectStream(path, protocol);
+        {
+            // The default IMediaSourceManager.SupportsDirectStream hardcodes
+            // false whenever the path contains ".m3u" / ".m3u8". BaseItem
+            // calls this on the URL we returned, which would wipe out the
+            // SupportsDirectStream flag we set in PlaybackInterceptor. For
+            // STRM items we force-override the answer so direct-stream /
+            // direct-play remains allowed.
+            var config = Plugin.Instance?.Configuration;
+            if (config != null
+                && config.Mode != Configuration.PluginMode.Disabled
+                && StrmUrlReader.IsStrmPath(path)
+                && (config.Mode == Configuration.PluginMode.ForceDirectStream
+                    || config.Mode == Configuration.PluginMode.BypassUserPolicy
+                    || _domainMatcher.IsWhitelisted(path, config.DomainWhitelist)))
+            {
+                if (config.DebugLogging)
+                {
+                    _logger.LogInformation("[STRM-DP] SupportsDirectStream override -> true for {Path}", path);
+                }
+                return true;
+            }
+
+            return _inner.SupportsDirectStream(path, protocol);
+        }
 
         /// <inheritdoc />
         public MediaProtocol GetPathProtocol(string path)
-            => _inner.GetPathProtocol(path);
+        {
+            // STRM items whose .strm body points at an http(s) URL must be
+            // reported as MediaProtocol.Http so the transcoder/stream picker
+            // treats them as remote but reachable, instead of falling back to
+            // File and then failing the SupportsDirectStream check.
+            if (!string.IsNullOrEmpty(path) && StrmUrlReader.IsStrmPath(path))
+            {
+                if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                    || path.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                {
+                    return MediaProtocol.Http;
+                }
+            }
+
+            return _inner.GetPathProtocol(path);
+        }
 
         /// <inheritdoc />
         public void SetDefaultAudioAndSubtitleStreamIndices(BaseItem item, MediaSourceInfo source, User user)

@@ -1,0 +1,61 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore Jellyfin.Plugin.StrmDirectPlay.sln
+
+      - name: Build (Release)
+        run: dotnet build Jellyfin.Plugin.StrmDirectPlay.sln --configuration Release --no-restore --verbosity normal
+
+      - name: Test
+        run: dotnet test Jellyfin.Plugin.StrmDirectPlay.sln --configuration Release --no-build --verbosity normal
+        continue-on-error: true
+
+      - name: Verify artifact
+        shell: bash
+        run: |
+          set -e
+          ARTIFACT=$(find Jellyfin.Plugin.StrmDirectPlay/bin/Release -name 'Jellyfin.Plugin.StrmDirectPlay.dll' | head -n 1)
+          if [[ -z "${ARTIFACT}" ]]; then
+            echo "::error::Plugin DLL not found in build output"
+            exit 1
+          fi
+          echo "Artifact: ${ARTIFACT}"
+          ls -la "$(dirname "${ARTIFACT}")"
