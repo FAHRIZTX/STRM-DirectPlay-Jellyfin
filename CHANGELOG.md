@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.18] - 2026-06-06
+
+### Changed
+- Replaced the `Scrutor`-based `IMediaSourceManager` decoration with a manual dependency injection decorator.
+- Removed the `Scrutor` NuGet package dependency from the plugin project.
+
+### Fixed
+- Fixed plugin startup failing with `Could not load file or assembly 'Scrutor'` when Jellyfin loads plugin services.
+- Fixed release packages requiring an external `Scrutor.dll` dependency in the Jellyfin plugin directory.
+
 ## [1.0.17] - 2026-06-06
 
 ### Changed
@@ -101,7 +111,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - DomainMatcher: Whitelist validation
   - MediaSourceInterceptor: Jellyfin integration
 
-[Unreleased]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/compare/v1.0.17...HEAD
+[Unreleased]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/compare/v1.0.18...HEAD
+[1.0.18]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/releases/tag/v1.0.18
 [1.0.17]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/releases/tag/v1.0.17
 [1.0.14]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/releases/tag/v1.0.14
 [1.0.13]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/releases/tag/v1.0.13
