@@ -10,6 +10,8 @@ STRM DirectPlay is an open-source plugin for Jellyfin that gives full control ov
 - 🎯 **Multiple Modes**: Choose how the plugin handles .strm files
 - 🌐 **Domain Whitelist**: Granular control based on domain
 - 🚫 **Block Transcoding**: Prevent transcoding for .strm files
+- 📺 **HLS Direct Stream**: Resolve `.m3u8` playlists to direct media segment URLs when possible
+- 🧩 **Jellyfin Repository Support**: `manifest.json` is published in Jellyfin plugin repository format
 - 🔒 **Security**: URL validation and dangerous scheme blocking
 - 📊 **Debug Logging**: Verbose logging for troubleshooting
 - ⚡ **Performance**: Minimize CPU usage and server bandwidth
@@ -28,7 +30,23 @@ This plugin is suited for:
 
 ## Installation
 
-### Method 1: Manual Installation
+### Method 1: Jellyfin Plugin Repository
+
+1. Open Jellyfin Dashboard
+2. Go to **Plugins** > **Repositories**
+3. Add this repository manifest URL:
+
+```text
+https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/releases/latest/download/manifest.json
+```
+
+4. Go to **Catalog**
+5. Install **STRM DirectPlay**
+6. Restart Jellyfin server
+
+> `manifest.json` is a Jellyfin plugin repository manifest. It is published as a separate release asset and is not included inside the plugin ZIP.
+
+### Method 2: Manual Installation
 
 1. Download the latest release from [Releases](https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/releases)
 2. Extract the ZIP file
@@ -38,7 +56,7 @@ This plugin is suited for:
    - Docker: `/config/plugins/`
 4. Restart Jellyfin server
 
-### Method 2: Build from Source
+### Method 3: Build from Source
 
 ```powershell
 # Clone repository
@@ -95,6 +113,43 @@ Else:
     Normal Jellyfin behavior
 ```
 
+#### ForceDirectStream
+Force direct playback handling for all safe `.strm` URLs.
+
+This mode is intended for remote HLS (`.m3u8`) and cloud/proxy URLs that Jellyfin normally tries to transcode. The plugin modifies the media source so Jellyfin prefers DirectPlay/DirectStream.
+
+Behavior:
+
+- keeps `IsRemote` disabled to avoid Jellyfin's forced remote-source transcoding policy
+- marks the source as DirectPlay/DirectStream capable
+- avoids probing and index requirements where possible
+- resolves `.m3u8` playlists to a direct `.ts` media segment URL when possible
+
+#### BypassUserPolicy
+Stricter variant of `ForceDirectStream` for trusted STRM sources.
+
+Use this when Jellyfin user/device policy still forces remuxing or transcoding even though the source is directly playable.
+
+Recommended only for trusted private URLs because it intentionally bypasses more Jellyfin playback checks.
+
+## HLS / `.m3u8` Behavior
+
+Jellyfin commonly transcodes `.m3u8` STRM sources because its internal direct stream checks reject paths containing `.m3u` / `.m3u8`, and remote sources can also trigger forced transcoding policies.
+
+STRM DirectPlay handles this by:
+
+1. Reading the original URL from the `.strm` file
+2. Fetching the HLS manifest when the URL ends with `.m3u8`
+3. Selecting the first variant playlist for master playlists, or the first media segment for media playlists
+4. Returning a direct media segment URL to Jellyfin
+5. Overriding media source flags so Jellyfin can choose DirectPlay/DirectStream
+
+Limitations:
+
+- HLS URLs that require custom headers, cookies, signed per-request tokens, or DRM may still fail.
+- The client must be able to access the resolved media segment URL directly.
+- Live HLS streams may not be ideal if the first segment expires quickly.
+
 ### Domain Whitelist Configuration
 
 Enter one domain per line:
@@ -127,6 +182,35 @@ Enable to see detailed logs:
 [STRM-DP] Returning original URL
 ```
 
+For HLS troubleshooting, look for logs like:
+
+```text
+[STRM-DP] Resolved HLS manifest to first segment: https://example.com/path/segment.ts
+[STRM-DP] SupportsDirectStream override -> true for ...
+```
+
+## Release Package Format
+
+GitHub Releases publish these assets:
+
+```text
+STRM-DirectPlay-Jellyfin_<version>.zip
+STRM-DirectPlay-Jellyfin_<version>.zip.md5
+manifest.json
+```
+
+The ZIP contains runtime plugin files only:
+
+```text
+Jellyfin.Plugin.StrmDirectPlay/
+    Jellyfin.Plugin.StrmDirectPlay.dll
+    README.md
+    LICENSE
+    CHANGELOG.md
+```
+
+`manifest.json` is kept outside the ZIP because it contains the ZIP checksum. Putting it inside the ZIP would create a checksum loop.
+
 ## Security
 
 Plugin has security checks:
@@ -152,9 +236,22 @@ Plugin has security checks:
 ### .strm file still being transcoded
 
 1. Check plugin mode (must be other than `Disabled`)
-2. If mode is `DomainWhitelist` or `Smart`, make sure domain is in whitelist
-3. Enable `Debug Logging` and check logs
-4. Make sure `Block Transcoding` is enabled
+2. For `.m3u8` URLs, try `ForceDirectStream` first
+3. If mode is `DomainWhitelist` or `Smart`, make sure domain is in whitelist
+4. If user/device policy still forces transcoding, try `BypassUserPolicy` for trusted sources
+5. Enable `Debug Logging` and check logs
+6. Make sure `Block Transcoding` is enabled
+
+### Jellyfin says checksum does not match
+
+1. Make sure the repository URL points to the latest `manifest.json` release asset
+2. Do not use a stale cached manifest file
+3. The manifest checksum is MD5, matching Jellyfin plugin installer expectations
+4. Re-add the repository in Jellyfin if it cached an older manifest
+
+### Plugin fails to load `Scrutor`
+
+Upgrade to version `1.0.18` or newer. Older builds used `Scrutor` for service decoration and could fail if `Scrutor.dll` was not present in the Jellyfin plugin folder.
 
 ### Client cannot play .strm file
 
@@ -200,12 +297,13 @@ dotnet test
 
 ```
 Plugin.cs
+├── ServiceRegistrator.cs          # Manual IMediaSourceManager decoration
+├── StrmMediaSourceManager.cs      # Jellyfin media source manager decorator
 ├── PluginConfiguration.cs
 ├── Core/
 │   ├── PlaybackInterceptor.cs    # Main logic
 │   ├── StrmUrlReader.cs           # Read .strm files
 │   └── DomainMatcher.cs           # Whitelist validation
-├── MediaSourceInterceptor.cs      # Jellyfin integration
 └── Configuration/
     └── configPage.html            # Web UI
 ```
