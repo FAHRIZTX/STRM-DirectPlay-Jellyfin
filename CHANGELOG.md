@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.17] - 2026-06-06
+
+### Changed
+- Updated `manifest.json` to use the Jellyfin plugin repository array format.
+- Updated release automation to write version entries to `.[0].versions` in the repository manifest.
+- Removed `manifest.json` from the plugin ZIP package to avoid stale manifest content and checksum circularity.
+- Updated release checksum generation from SHA256 to MD5 for Jellyfin plugin installer compatibility.
+
+### Fixed
+- Fixed Jellyfin repository installation failing with `The checksum of the received data doesn't match`.
+- Fixed release workflow attempting to push manifest updates to an existing tag ref.
+- Fixed duplicate manifest entries when a release workflow is re-run for the same version.
+- Fixed release ZIP packaging behavior so the external release manifest remains the single source of truth.
+
 ## [1.0.14] - 2026-06-06
 
 ### Added
@@ -87,7 +101,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - DomainMatcher: Whitelist validation
   - MediaSourceInterceptor: Jellyfin integration
 
-[Unreleased]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/compare/v1.0.13...HEAD
+[Unreleased]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/compare/v1.0.17...HEAD
+[1.0.17]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/releases/tag/v1.0.17
+[1.0.14]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/releases/tag/v1.0.14
 [1.0.13]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/releases/tag/v1.0.13
 [1.0.0]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/releases/tag/v1.0.0
 
