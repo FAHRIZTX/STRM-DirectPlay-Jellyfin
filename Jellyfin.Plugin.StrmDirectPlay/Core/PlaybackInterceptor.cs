@@ -144,11 +144,12 @@ namespace Jellyfin.Plugin.StrmDirectPlay.Core
             var playableUrl = await ResolveDirectPlayableUrlAsync(url, config).ConfigureAwait(false);
 
             var info = InferMediaInfo(playableUrl);
+            const string container = "m3u8";
 
             // Set the new path to the underlying media URL.
             mediaSource.Path = playableUrl;
             mediaSource.Protocol = MediaProtocol.Http;
-            mediaSource.Container = info.Container;
+            mediaSource.Container = container;
 
             // CRITICAL: do NOT set IsRemote = true. Setting IsRemote causes
             // Jellyfin to apply ForceRemoteSourceTranscoding user policy and force
@@ -179,7 +180,7 @@ namespace Jellyfin.Plugin.StrmDirectPlay.Core
             // Replace MediaStreams with a minimal, container-agnostic set so that
             // StreamBuilder does not need to probe the source and does not apply
             // direct-stream rules that depend on the original streams.
-            mediaSource.MediaStreams = BuildMinimalStreams(info.Container);
+            mediaSource.MediaStreams = BuildMinimalStreams(container);
 
             // Clear anamorphic flags - many clients do not report anamorphic support
             // which forces Jellyfin to transcode.
@@ -347,6 +348,7 @@ namespace Jellyfin.Plugin.StrmDirectPlay.Core
                 new MediaStream
                 {
                     Type = MediaStreamType.Video,
+                    Codec = "h264",
                     Index = 0,
                     IsDefault = true,
                     IsForced = false,
@@ -356,6 +358,7 @@ namespace Jellyfin.Plugin.StrmDirectPlay.Core
                 new MediaStream
                 {
                     Type = MediaStreamType.Audio,
+                    Codec = "aac",
                     Index = 1,
                     IsDefault = true,
                     IsForced = false,
