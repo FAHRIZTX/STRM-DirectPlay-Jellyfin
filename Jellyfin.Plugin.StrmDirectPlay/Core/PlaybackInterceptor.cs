@@ -144,7 +144,7 @@ namespace Jellyfin.Plugin.StrmDirectPlay.Core
             var playableUrl = await ResolveDirectPlayableUrlAsync(url, config).ConfigureAwait(false);
 
             var info = InferMediaInfo(playableUrl);
-            const string container = "m3u8";
+            const string container = "ts";
 
             // Set the new path to the underlying media URL.
             mediaSource.Path = playableUrl;
