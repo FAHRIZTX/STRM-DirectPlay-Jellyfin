@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/fahriztx/STRM-DirectPlay-Jellyfin/master/assets/logo.png",
     "versions": [
       {
+        "version": "1.0.19.0",
+        "changelog": "\n### Changed\n- Updated STRM media source metadata to advertise HLS playback with `Container = m3u8`.\n- Kept HTTP protocol output with `SupportsDirectPlay` and `SupportsDirectStream` enabled for direct playback paths.\n- Updated placeholder media streams to declare H.264 video and AAC audio codecs for client compatibility.\n",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/FAHRIZTX/STRM-DirectPlay-Jellyfin/releases/download/v1.0.19/STRM-DirectPlay-Jellyfin_1.0.19.zip",
+        "checksum": "828c5ec1f6e766029979af9c9e39f7a9",
+        "timestamp": "2026-06-08T16:42:45Z"
+      },
+      {
         "version": "1.0.18.0",
         "changelog": "\n### Changed\n- Replaced the `Scrutor`-based `IMediaSourceManager` decoration with a manual dependency injection decorator.\n- Removed the `Scrutor` NuGet package dependency from the plugin project.\n\n### Fixed\n- Fixed plugin startup failing with `Could not load file or assembly 'Scrutor'` when Jellyfin loads plugin services.\n- Fixed release packages requiring an external `Scrutor.dll` dependency in the Jellyfin plugin directory.\n",
         "targetAbi": "10.11.0.0",
