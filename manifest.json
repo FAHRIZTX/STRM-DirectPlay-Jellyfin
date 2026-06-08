@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/fahriztx/STRM-DirectPlay-Jellyfin/master/assets/logo.png",
     "versions": [
       {
+        "version": "1.0.20.0",
+        "changelog": "\n### Changed\n- Updated STRM media source metadata to advertise HLS playback with `Container = m3u8`.\n- Kept HTTP protocol output with `SupportsDirectPlay` and `SupportsDirectStream` enabled for direct playback paths.\n- Updated placeholder media streams to declare H.264 video and AAC audio codecs for client compatibility.\n",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/FAHRIZTX/STRM-DirectPlay-Jellyfin/releases/download/v1.0.20/STRM-DirectPlay-Jellyfin_1.0.20.zip",
+        "checksum": "2b4f15712921f22e8f3606a759608dae",
+        "timestamp": "2026-06-08T16:49:40Z"
+      },
+      {
         "version": "1.0.19.0",
         "changelog": "\n### Changed\n- Updated STRM media source metadata to advertise HLS playback with `Container = m3u8`.\n- Kept HTTP protocol output with `SupportsDirectPlay` and `SupportsDirectStream` enabled for direct playback paths.\n- Updated placeholder media streams to declare H.264 video and AAC audio codecs for client compatibility.\n",
         "targetAbi": "10.11.0.0",
