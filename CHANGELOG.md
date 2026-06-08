@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.21] - 2026-06-09
+
+### Changed
+- Updated STRM media source metadata to advertise `Container = ts` for HLS direct playback compatibility.
+- Kept forced HTTP playback output with `SupportsDirectPlay` and `SupportsDirectStream` enabled.
+- Kept placeholder stream codecs as H.264 video and AAC audio for client profile matching.
+
 ## [1.0.20] - 2026-06-08
 
 ### Changed
@@ -118,7 +125,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - DomainMatcher: Whitelist validation
   - MediaSourceInterceptor: Jellyfin integration
 
-[Unreleased]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/compare/v1.0.20...HEAD
+[Unreleased]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/compare/v1.0.21...HEAD
+[1.0.21]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/releases/tag/v1.0.21
 [1.0.20]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/releases/tag/v1.0.20
 [1.0.18]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/releases/tag/v1.0.18
 [1.0.17]: https://github.com/fahriztx/STRM-DirectPlay-Jellyfin/releases/tag/v1.0.17
